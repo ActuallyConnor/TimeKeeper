@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, {useEffect, useState, useCallback, useMemo} from "react";
 import {
   StyleSheet,
   View,
@@ -19,14 +19,14 @@ import {
   SegmentedButtons,
   Button,
 } from "react-native-paper";
-import { useFonts } from "expo-font";
+import {useFonts} from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LinearGradient } from "expo-linear-gradient";
-import { format } from "date-fns";
-import { useThemeContext } from "@/context/ThemeContext";
-import { useRouter } from "expo-router";
-import { useCounterContext } from "@/context/counterContext";
+import {LinearGradient} from "expo-linear-gradient";
+import {format} from "date-fns";
+import {useThemeContext} from "@/context/ThemeContext";
+import {useRouter} from "expo-router";
+import {useCounterContext} from "@/context/counterContext";
 import Animated, {
   Easing,
   runOnJS,
@@ -44,6 +44,7 @@ const BUTTON_WIDTH = 150;
 const BUTTON_GAP = 0;
 const LEFT_POSITION = 40;
 const RIGHT_POSITION = BUTTON_WIDTH + 60;
+import {ErrorBoundary, setupNoibu} from 'noibu-react-native';
 
 // Keep splash screen visible while fonts load or data loads
 SplashScreen.preventAutoHideAsync();
@@ -66,13 +67,16 @@ const STORAGE_KEY = "@days_since_app_data_v2"; // Use versioned key
 
 type themeModeType = "light" | "dark" | "system";
 
+setupNoibu({domain: 'timekeeper.noibu.com'});
+
+
 export default function Index() {
-  const { themeMode } = useThemeContext();
-  const { toggleTheme, setTheme } = useThemeContext();
+  const {themeMode} = useThemeContext();
+  const {toggleTheme, setTheme} = useThemeContext();
   const theme = useTheme(); // Access theme colors
   const sliderTranslateX = useSharedValue(LEFT_POSITION);
 
-  const { counters, setCounters, markCounterCompleted } = useCounterContext();
+  const {counters, setCounters, markCounterCompleted} = useCounterContext();
 
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [currentView, setCurrentView] = useState<"current" | "archive">(
@@ -218,7 +222,7 @@ export default function Index() {
   // slider animation
   const animatedSliderStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: sliderTranslateX.value }],
+      transform: [{translateX: sliderTranslateX.value}],
     };
   });
 
@@ -237,7 +241,7 @@ export default function Index() {
         counterToDelete?.name || "this counter"
       }"? This cannot be undone.`,
       [
-        { text: "Cancel", style: "cancel" },
+        {text: "Cancel", style: "cancel"},
         {
           text: "Delete",
           style: "destructive",
@@ -258,7 +262,7 @@ export default function Index() {
     const nextIsArchived = !targetCounter.isArchived;
     setCounters((prevCounters) =>
       prevCounters.map((counter) =>
-        counter.id === id ? { ...counter, isArchived: nextIsArchived } : counter
+        counter.id === id ? {...counter, isArchived: nextIsArchived} : counter
       )
     );
     ToastAndroid.show(
@@ -350,14 +354,14 @@ export default function Index() {
 
   // --- Render Item for FlatList ---
   const renderCounterItem = useCallback(
-    ({ item }: { item: Counter }) => {
+    ({item}: { item: Counter }) => {
       const now = Date.now();
       const elapsedMs = Math.max(0, now - item.createdAt);
       const forthcommingMs = Math.max(0, item.createdAt - now);
 
       let baseStyle = styles.hoursMinutesSecondsNumber; // Default to H/M/S style
 
-      const { displayLabel, displayValue, isDaysView, remainingSeconds } =
+      const {displayLabel, displayValue, isDaysView, remainingSeconds} =
         item.type === "countdown"
           ? calculateCountdown(forthcommingMs, baseStyle)
           : calculateCountup(elapsedMs, baseStyle);
@@ -399,8 +403,8 @@ export default function Index() {
                   ? ["#E0E0E0", "#4285F4"]
                   : ["#FEC9CE", "#FF96A1"]
               }
-              start={{ x: 1, y: 1 }}
-              end={{ x: 0, y: 0 }}
+              start={{x: 1, y: 1}}
+              end={{x: 0, y: 0}}
               style={styles.gradient}
             >
               {!item.completed ? (
@@ -484,7 +488,7 @@ export default function Index() {
                     style={styles.deleteIcon}
                   />
                   <Text
-                    style={[styles.hoursMinutesSecondsNumber, { fontSize: 30 }]}
+                    style={[styles.hoursMinutesSecondsNumber, {fontSize: 30}]}
                   >
                     completed
                   </Text>
@@ -515,16 +519,16 @@ export default function Index() {
       <SafeAreaView
         style={[
           styles.container,
-          { backgroundColor: theme?.colors?.background || "#fff" },
+          {backgroundColor: theme?.colors?.background || "#fff"},
         ]}
       >
         <View style={styles.centeredError}>
           <Text
-            style={{ color: theme?.colors?.error || "red", marginBottom: 10 }}
+            style={{color: theme?.colors?.error || "red", marginBottom: 10}}
           >
             Error loading application assets.
           </Text>
-          <Text style={{ color: theme?.colors?.onSurface || "#000" }}>
+          <Text style={{color: theme?.colors?.onSurface || "#000"}}>
             Please restart the app. Font: {error.message}
           </Text>
         </View>
@@ -533,95 +537,103 @@ export default function Index() {
   }
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      {/* Custom Header */}
-      <Appbar.Header
-        mode="center-aligned"
-        elevated={false}
-        style={{ backgroundColor: theme.colors.background }}
-      >
-        <Appbar.Action icon="theme-light-dark" onPress={() => toggleTheme()} />
-        <Appbar.Content title="" />
-        <Appbar.Action
-          icon="plus"
-          size={28}
-          onPress={() => {
-            // Removed direct modal state management
-            router.push("/add.modal"); // Navigate to the add.modal screen
-          }}
-        />
-      </Appbar.Header>
-
-      <View style={styles.segmentContainer}>
-        <Animated.View
-          style={[
-            styles.sliderBackground,
-            animatedSliderStyle,
-            {
-              backgroundColor: "#4285F4",
-            },
-          ]}
-        />
-        <Button
-          labelStyle={[
-            styles.buttonLabel,
-            {
-              fontSize: currentView === "current" ? 17 : 15,
-              fontWeight: currentView === "current" ? "bold" : "900",
-            },
-          ]}
-          onPress={() => setCurrentView("current")}
-          style={[styles.topbtn, styles.transparentButton, {}]}
-          textColor={themeMode === "dark" ? "#fff" : "#000"}
-        >
-          Counters
-        </Button>
-
-        <Button
-          labelStyle={[
-            styles.buttonLabel,
-            {
-              fontSize: currentView === "archive" ? 17 : 15,
-              fontWeight: currentView === "archive" ? "bold" : "900",
-            },
-          ]}
-          onPress={() => setCurrentView("archive")}
-          style={[styles.topbtn, styles.transparentButton]}
-          textColor={themeMode === "dark" ? "#fff" : "#000"}
-        >
-          Archives
-        </Button>
-      </View>
-      <GestureDetector
-        gesture={Gesture.Simultaneous(flingRightGesture, flingLeftGesture)}
-      >
-        <View style={{ flex: 1 }}>
-          <FlatList
-            data={displayedCounters}
-            renderItem={renderCounterItem} // No conditional rendering based on isModalVisible
-            keyExtractor={(item) => item.id}
-            ListEmptyComponent={
-              <View style={styles.centered}>
-                <Text style={styles.emptyText}>
-                  No counters {currentView === "archive" ? "archived" : "yet"}.
-                </Text>
-                {currentView === "current" && !isDataLoaded && (
-                  <ActivityIndicator style={{ marginTop: 20 }} size="large" />
-                )}
-                {currentView === "current" &&
-                  isDataLoaded &&
-                  displayedCounters.length === 0 && (
-                    <Text style={styles.emptyText}>Press '+' to add one!</Text>
-                  )}
-              </View>
-            }
-            contentContainerStyle={styles.listContent}
-          />
+    <ErrorBoundary
+      fallback={() => (
+        <View>
+          <Text>Oh no!</Text>
         </View>
-      </GestureDetector>
-    </SafeAreaView>
+      )}
+    >
+      <SafeAreaView
+        style={[styles.container, {backgroundColor: theme.colors.background}]}
+      >
+        {/* Custom Header */}
+        <Appbar.Header
+          mode="center-aligned"
+          elevated={false}
+          style={{backgroundColor: theme.colors.background}}
+        >
+          <Appbar.Action icon="theme-light-dark" onPress={() => toggleTheme()}/>
+          <Appbar.Content title=""/>
+          <Appbar.Action
+            icon="plus"
+            size={28}
+            onPress={() => {
+              // Removed direct modal state management
+              router.push("/add.modal"); // Navigate to the add.modal screen
+            }}
+          />
+        </Appbar.Header>
+
+        <View style={styles.segmentContainer}>
+          <Animated.View
+            style={[
+              styles.sliderBackground,
+              animatedSliderStyle,
+              {
+                backgroundColor: "#4285F4",
+              },
+            ]}
+          />
+          <Button
+            labelStyle={[
+              styles.buttonLabel,
+              {
+                fontSize: currentView === "current" ? 17 : 15,
+                fontWeight: currentView === "current" ? "bold" : "900",
+              },
+            ]}
+            onPress={() => setCurrentView("current")}
+            style={[styles.topbtn, styles.transparentButton, {}]}
+            textColor={themeMode === "dark" ? "#fff" : "#000"}
+          >
+            Counters
+          </Button>
+
+          <Button
+            labelStyle={[
+              styles.buttonLabel,
+              {
+                fontSize: currentView === "archive" ? 17 : 15,
+                fontWeight: currentView === "archive" ? "bold" : "900",
+              },
+            ]}
+            onPress={() => setCurrentView("archive")}
+            style={[styles.topbtn, styles.transparentButton]}
+            textColor={themeMode === "dark" ? "#fff" : "#000"}
+          >
+            Archives
+          </Button>
+        </View>
+        <GestureDetector
+          gesture={Gesture.Simultaneous(flingRightGesture, flingLeftGesture)}
+        >
+          <View style={{flex: 1}}>
+            <FlatList
+              data={displayedCounters}
+              renderItem={renderCounterItem} // No conditional rendering based on isModalVisible
+              keyExtractor={(item) => item.id}
+              ListEmptyComponent={
+                <View style={styles.centered}>
+                  <Text style={styles.emptyText}>
+                    No counters {currentView === "archive" ? "archived" : "yet"}.
+                  </Text>
+                  {currentView === "current" && !isDataLoaded && (
+                    <ActivityIndicator style={{marginTop: 20}} size="large"/>
+                  )}
+                  {currentView === "current" &&
+                    isDataLoaded &&
+                    displayedCounters.length === 0 && (
+                      <Text style={styles.emptyText}>Press '+' to add one!</Text>
+                    )}
+                </View>
+              }
+              contentContainerStyle={styles.listContent}
+            />
+          </View>
+        </GestureDetector>
+      </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 
